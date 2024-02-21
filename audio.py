@@ -1,10 +1,10 @@
-import pyaudio
-import numpy as np
-import librosa
-import obswebsocket
-from obswebsocket import obsws, requests
+import time
 import os
 import sys
+from datetime import datetime
+import pyaudio
+import numpy as np
+from obswebsocket import obsws, requests
 
 # OBS WebSocket configuration
 obs_host = "localhost"
@@ -20,74 +20,168 @@ CHUNK = 1024
 FORMAT = pyaudio.paInt16
 CHANNELS = 2
 RATE = 44100
+THRESHOLD = 0.02  # Threshold for music detection
 
-# Threshold for music detection
-threshold = 0.02
 
-# Initialize PyAudio
-audio = pyaudio.PyAudio()
+# Function to create a log file
+def create_log(log_path):
+    timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
+    log_filename = os.path.join(log_path, f"OBS_audio_control_log_{timestamp}.txt")
+    with open(log_filename, "w") as log_file:
+        log_file.write("Log file created.\n")
+    return log_filename
 
-# Open the audio stream
-stream = audio.open(format=FORMAT,
+
+# Function to write to the log file
+def write_to_log(log_filename, message):
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    with open(log_filename, "a") as log_file:
+        log_file.write(f"{timestamp} - {message}\n")
+
+
+# Function to switch audio source and play music in OBS
+def switch_and_play_music():
+    obs_ws.call(requests.SetCurrentScene(sceneName="Your Scene Name"))
+    obs_ws.call(requests.SetMute(mute=True, source="Your Source Name"))  # Mute original audio source
+    obs_ws.call(requests.SetSourceRender(source="Your Source Name", render=False))  # Disable original audio source
+    obs_ws.call(requests.SetSourceRender(source="Your New Source Name", render=True))  # Enable new audio source
+    obs_ws.call(requests.PlayPauseMedia(source="Your Music File"))  # Play music file
+
+
+# Function to switch back audio source in OBS
+def switch_back_audio():
+    obs_ws.call(requests.SetCurrentScene(sceneName="Your Scene Name"))
+    obs_ws.call(requests.SetMute(mute=False, source="Your Source Name"))  # Unmute original audio source
+    obs_ws.call(requests.SetSourceRender(source="Your Source Name", render=True))  # Enable original audio source
+    obs_ws.call(requests.SetSourceRender(source="Your New Source Name", render=False))  # Disable new audio source
+
+
+# Function to stop audio monitoring
+def stop_audio_monitoring(p, stream):
+    if stream:
+        stream.stop_stream()
+        stream.close()
+    if p:
+        p.terminate()
+
+
+# Monitoring 1: Ambient microphone monitoring
+def monitoring_1(log_filename):
+    status_display("Ambient microphone monitoring")
+    write_to_log(log_filename, "Ambient microphone monitoring")
+    time.sleep(5)
+
+    p = pyaudio.PyAudio()
+    stream = p.open(format=FORMAT,
                     channels=CHANNELS,
                     rate=RATE,
                     input=True,
                     frames_per_buffer=CHUNK)
 
-print("Monitoring audio input...")
-
-try:
     while True:
-        # Read audio data from the stream
         data = stream.read(CHUNK)
-
-        # Convert audio data to numpy array for analysis
         audio_data = np.frombuffer(data, dtype=np.int16)
-
-        # Calculate the Root Mean Square (RMS) of the audio signal
         rms = np.sqrt(np.mean(np.square(audio_data)))
 
-        # If the RMS exceeds the threshold, consider it as music
-        if rms > threshold:
-            print("Music detected!")
-            # Send command to OBS to play the specific audio file
-            obs_ws.call(requests.PlayPauseMedia(source="your_specific_audio_file_source"))
+        if rms > THRESHOLD:
+            status_display("Music detected!")
+            write_to_log(log_filename, "Music detected!")
+            switch_and_play_music()
+            break
 
-        # Prompt for user input
-        user_input = input("Enter command ('reset' to restart, 'exit' to quit): ")
+    stop_audio_monitoring(p, stream)
+    monitoring_2(log_filename)
 
-        # Process user input
-        if user_input == 'reset':
-            # Close current ports and restart the program
-            stream.stop_stream()
-            stream.close()
-            audio.terminate()
+
+# Monitoring 2: Waiting for music to stop
+def monitoring_2(log_filename):
+    status_display("Waiting for the music in the Ambient microphone to stop")
+    write_to_log(log_filename, "Waiting for the music in the Ambient microphone to stop")
+    time.sleep(5)
+
+    p = pyaudio.PyAudio()
+    stream = p.open(format=FORMAT,
+                    channels=CHANNELS,
+                    rate=RATE,
+                    input=True,
+                    frames_per_buffer=CHUNK)
+
+    while True:
+        data = stream.read(CHUNK)
+        audio_data = np.frombuffer(data, dtype=np.int16)
+        rms = np.sqrt(np.mean(np.square(audio_data)))
+
+        if rms < THRESHOLD:
+            status_display("Music stopped")
+            write_to_log(log_filename, "Music stopped")
+            switch_back_audio()
+            break
+
+    stop_audio_monitoring(p, stream)
+    monitoring_1(log_filename)
+
+
+# Function to display specific information in a status box
+def status_display(message):
+    os.system('cls' if os.name == 'nt' else 'clear')
+    print("Enter 'start' to start monitoring, enter 'stop' to stop monitoring, enter 'exit' to exit.")
+    print(message)
+
+
+# System module
+def system_module():
+    print("Enter 'start' to start monitoring, enter 'stop' to stop monitoring, enter 'exit' to exit.")
+
+    time.sleep(5)  # Wait for 5 seconds before starting monitoring
+    log_path = "/path/to/log/directory"  # Specify the log file path here
+    log_filename = create_log(log_path)
+    status_display("On standby...")
+
+    p = None
+    stream = None
+
+    while True:
+        command = input("Enter command: ")
+
+        if command == "start":
+            status_display("Starting monitoring...")
+            stop_audio_monitoring(p, stream)
+            time.sleep(1)
+            monitoring_1(log_filename)
+        elif command == "stop":
+            status_display("Stopping monitoring...")
+            write_to_log(log_filename, "Monitoring stopped.")
+            time.sleep(1)
+            stop_audio_monitoring(p, stream)
+            time.sleep(1)
+            status_display("On standby...")
+            break
+        elif command == "exit":
+            status_display("Exiting program...")
+            write_to_log(log_filename, "Program exited.")
+            time.sleep(1)
+            stop_audio_monitoring(p, stream)
+            time.sleep(1)
             obs_ws.disconnect()
-            os.execl(sys.executable, sys.executable, *sys.argv)
-        elif user_input == 'exit':
-            # Close current ports and exit the program
-            stream.stop_stream()
-            stream.close()
-            audio.terminate()
-            obs_ws.disconnect()
+            time.sleep(1)
             sys.exit()
 
-finally:
-    # Close the audio stream and terminate PyAudio
-    stream.stop_stream()
-    stream.close()
-    audio.terminate()
-    # Disconnect from OBS WebSocket
-    obs_ws.disconnect()
 
-# Make sure you have installed the required libraries using:
+# Entry point of the program
+if __name__ == "__main__":
+    system_module()
+
+# Make sure you have the appropriate python 3 environment deployed on your computer.
+# Make sure you have installed the required libraries using the following command.
 # Enter in macOS Terminal: 'pip install pyaudio librosa obs-websocket-py'
 
-# Replace "your_obs_password" with the password you set for your OBS WebSocket server.
-# Make sure your OBS is running and the WebSocket plug-in is enabled and the password is set correctly.
+# Make sure OBS is running and the WebSocket plugin is enabled.
+# Make sure the password is set correctly in the code (obs_password).
 
-# Also, replace "your_specific_audio_file_source" with the name of the audio file source
-# you want to play in OBS when music is detected.
+# Replace the placeholder strings "Your Scene Name", "Your Source Name", "Your New Source Name",
+# and "Your Music File" with the appropriate names from your OBS settings.
 
-# In addition, please confirm the numerical size of the ‘threshold’ parameter through debugging.
+# Replace the placeholder string "/path/to/log/directory" with the location where you want to save the logs.
+
+# In addition, please confirm the numerical size of the ‘THRESHOLD’ parameter through debugging.
 # This number will affect the sensitivity of the program to cut off the live audio.

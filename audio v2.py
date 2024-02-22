@@ -5,6 +5,7 @@ from datetime import datetime
 import pyaudio
 import numpy as np
 from obswebsocket import obsws, requests
+from threading import Thread
 
 # OBS WebSocket configuration
 obs_host = "localhost"
@@ -21,6 +22,9 @@ FORMAT = pyaudio.paInt16
 CHANNELS = 2
 RATE = 44100
 THRESHOLD = 0.02  # Threshold for music detection
+
+# Flag to control audio monitoring
+stop_audio_flag = False
 
 
 # Function to create a log file
@@ -58,6 +62,8 @@ def switch_back_audio():
 
 # Function to stop audio monitoring
 def stop_audio_monitoring(p, stream):
+    global stop_audio_flag
+    stop_audio_flag = True
     if stream:
         stream.stop_stream()
         stream.close()
@@ -78,7 +84,10 @@ def monitoring_1(log_filename):
                     input=True,
                     frames_per_buffer=CHUNK)
 
-    while True:
+    global stop_audio_flag
+    stop_audio_flag = False
+
+    while not stop_audio_flag:
         data = stream.read(CHUNK)
         audio_data = np.frombuffer(data, dtype=np.int16)
         rms = np.sqrt(np.mean(np.square(audio_data)))
@@ -106,7 +115,10 @@ def monitoring_2(log_filename):
                     input=True,
                     frames_per_buffer=CHUNK)
 
-    while True:
+    global stop_audio_flag
+    stop_audio_flag = False
+
+    while not stop_audio_flag:
         data = stream.read(CHUNK)
         audio_data = np.frombuffer(data, dtype=np.int16)
         rms = np.sqrt(np.mean(np.square(audio_data)))
@@ -131,28 +143,26 @@ def status_display(message):
 # System module
 def system_module():
     print("Enter 'start' to start monitoring, enter 'stop' to stop monitoring, enter 'exit' to exit.")
-
     time.sleep(5)  # Wait for 5 seconds before starting monitoring
+
     log_path = "/path/to/log/directory"  # Specify the log file path here
     log_filename = create_log(log_path)
     status_display("On standby...")
-
-    p = None
-    stream = None
 
     while True:
         command = input("Enter command: ")
 
         if command == "start":
             status_display("Starting monitoring...")
-            stop_audio_monitoring(p, stream)
+            stop_audio_flag = True
             time.sleep(1)
-            monitoring_1(log_filename)
+            monitoring_thread = Thread(target=monitoring_1, args=(log_filename,))
+            monitoring_thread.start()
         elif command == "stop":
             status_display("Stopping monitoring...")
             write_to_log(log_filename, "Monitoring stopped.")
             time.sleep(1)
-            stop_audio_monitoring(p, stream)
+            stop_audio_flag = True
             time.sleep(1)
             status_display("On standby...")
             break
@@ -160,7 +170,7 @@ def system_module():
             status_display("Exiting program...")
             write_to_log(log_filename, "Program exited.")
             time.sleep(1)
-            stop_audio_monitoring(p, stream)
+            stop_audio_flag = True
             time.sleep(1)
             obs_ws.disconnect()
             time.sleep(1)
@@ -170,18 +180,3 @@ def system_module():
 # Entry point of the program
 if __name__ == "__main__":
     system_module()
-
-# Make sure you have the appropriate python 3 environment deployed on your computer.
-# Make sure you have installed the required libraries using the following command.
-# Enter in macOS Terminal: 'pip install pyaudio librosa obs-websocket-py numpy'
-
-# Make sure OBS is running and the WebSocket plugin is enabled.
-# Make sure the password is set correctly in the code (obs_password).
-
-# Replace the placeholder strings "Your Scene Name", "Your Source Name", "Your New Source Name",
-# and "Your Music File" with the appropriate names from your OBS settings.
-
-# Replace the placeholder string "/path/to/log/directory" with the location where you want to save the logs.
-
-# In addition, please confirm the numerical size of the ‘THRESHOLD’ parameter through debugging.
-# This number will affect the sensitivity of the program to cut off the live audio.

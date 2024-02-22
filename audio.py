@@ -173,7 +173,7 @@ if __name__ == "__main__":
 
 # Make sure you have the appropriate python 3 environment deployed on your computer.
 # Make sure you have installed the required libraries using the following command.
-# Enter in macOS Terminal: 'pip install pyaudio librosa obs-websocket-py'
+# Enter in macOS Terminal: 'pip install pyaudio librosa obs-websocket-py numpy'
 
 # Make sure OBS is running and the WebSocket plugin is enabled.
 # Make sure the password is set correctly in the code (obs_password).

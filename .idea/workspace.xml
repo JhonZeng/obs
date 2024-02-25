@@ -5,8 +5,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="6121b6f1-af77-40fa-82f3-09377c219664" name="Changes" comment="Changes">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/audio v2.py" beforeDir="false" afterPath="$PROJECT_DIR$/audio v2.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pyaudio input set.py" beforeDir="false" afterPath="$PROJECT_DIR$/pyaudio input set.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -162,6 +161,7 @@
   </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="Changes" />
-    <option name="LAST_COMMIT_MESSAGE" value="Changes" />
+    <MESSAGE value="V3 Development Manual:&#10;New: select_audio_device module&#10;The select_audio_device module is added to set the listening device. After startup, this module lists all audio sources that the system can now detect, and waits for the user to enter the index number of the audio source to set the listening target.&#10;Update: System Modules&#10;The system module is now modified to have four enterable commands. Enter ‘set monitoring device’ to set up the monitoring device, enter ‘start’ to start monitoring, enter ‘stop’ to stop monitoring, enter ‘exit’ to exit.&#10;Each time you start, you need to enter ‘set monitoring device’ to set up the target monitoring device. If you enter the &quot;Start&quot; command before setting up the monitoring device, the system will automatically report an error prompting you to set up the monitoring device and return to the initial interface." />
+    <option name="LAST_COMMIT_MESSAGE" value="V3 Development Manual:&#10;New: select_audio_device module&#10;The select_audio_device module is added to set the listening device. After startup, this module lists all audio sources that the system can now detect, and waits for the user to enter the index number of the audio source to set the listening target.&#10;Update: System Modules&#10;The system module is now modified to have four enterable commands. Enter ‘set monitoring device’ to set up the monitoring device, enter ‘start’ to start monitoring, enter ‘stop’ to stop monitoring, enter ‘exit’ to exit.&#10;Each time you start, you need to enter ‘set monitoring device’ to set up the target monitoring device. If you enter the &quot;Start&quot; command before setting up the monitoring device, the system will automatically report an error prompting you to set up the monitoring device and return to the initial interface." />
   </component>
 </project>

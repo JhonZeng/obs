@@ -180,3 +180,19 @@ def system_module():
 # Entry point of the program
 if __name__ == "__main__":
     system_module()
+
+
+# Make sure you have the appropriate python 3 environment deployed on your computer.
+# Make sure you have installed the required libraries using the following command.
+# Enter in macOS Terminal: 'pip install pyaudio librosa obs-websocket-py numpy'
+
+# Make sure OBS is running and the WebSocket plugin is enabled.
+# Make sure the password is set correctly in the code (obs_password).
+
+# Replace the placeholder strings "Your Scene Name", "Your Source Name", "Your New Source Name",
+# and "Your Music File" with the appropriate names from your OBS settings.
+
+# Replace the placeholder string "/path/to/log/directory" with the location where you want to save the logs.
+
+# In addition, please confirm the numerical size of the ‘THRESHOLD’ parameter through debugging.
+# This number will affect the sensitivity of the program to cut off the live audio.

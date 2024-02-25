@@ -23,9 +23,6 @@ CHANNELS = 2
 RATE = 44100
 THRESHOLD = 0.02  # Threshold for music detection
 
-# Flag to control audio monitoring
-stop_audio_flag = False
-
 
 # Function to create a log file
 def create_log(log_path):
@@ -72,17 +69,19 @@ def stop_audio_monitoring(p, stream):
 
 
 # Monitoring 1: Ambient microphone monitoring
-def monitoring_1(log_filename):
+def monitoring_1(log_filename, device_index):
     status_display("Ambient microphone monitoring")
     write_to_log(log_filename, "Ambient microphone monitoring")
     time.sleep(5)
 
     p = pyaudio.PyAudio()
+
     stream = p.open(format=FORMAT,
                     channels=CHANNELS,
                     rate=RATE,
                     input=True,
-                    frames_per_buffer=CHUNK)
+                    frames_per_buffer=CHUNK,
+                    input_device_index=device_index)
 
     global stop_audio_flag
     stop_audio_flag = False
@@ -99,21 +98,23 @@ def monitoring_1(log_filename):
             break
 
     stop_audio_monitoring(p, stream)
-    monitoring_2(log_filename)
+    monitoring_2(log_filename, device_index)
 
 
 # Monitoring 2: Waiting for music to stop
-def monitoring_2(log_filename):
+def monitoring_2(log_filename, device_index):
     status_display("Waiting for the music in the Ambient microphone to stop")
     write_to_log(log_filename, "Waiting for the music in the Ambient microphone to stop")
     time.sleep(5)
 
     p = pyaudio.PyAudio()
+
     stream = p.open(format=FORMAT,
                     channels=CHANNELS,
                     rate=RATE,
                     input=True,
-                    frames_per_buffer=CHUNK)
+                    frames_per_buffer=CHUNK,
+                    input_device_index=device_index)
 
     global stop_audio_flag
     stop_audio_flag = False
@@ -130,19 +131,47 @@ def monitoring_2(log_filename):
             break
 
     stop_audio_monitoring(p, stream)
-    monitoring_1(log_filename)
+    monitoring_1(log_filename, device_index)
 
 
 # Function to display specific information in a status box
 def status_display(message):
     os.system('cls' if os.name == 'nt' else 'clear')
-    print("Enter 'start' to start monitoring, enter 'stop' to stop monitoring, enter 'exit' to exit.")
+    print("Enter 'Set monitoring device' to set up the monitoring device, "
+          "enter 'start' to start monitoring, enter 'stop' to stop monitoring, "
+          "enter 'exit' to exit.")
     print(message)
+
+
+# Function to select the audio input device
+def select_audio_device():
+    p = pyaudio.PyAudio()
+    status_display("Select the audio input device:")
+    for i in range(p.get_device_count()):
+        device_info = p.get_device_info_by_index(i)
+        if device_info.get('maxInputChannels') > 0:
+            print(f"Device {i}: {device_info.get('name')}")
+
+    while True:
+        try:
+            index = int(input("Enter the index number of the audio input device: "))
+            device_info = p.get_device_info_by_index(index)
+            if device_info.get('maxInputChannels') > 0:
+                break
+            else:
+                print("Invalid device index.")
+        except ValueError:
+            print("Invalid input. Please enter a valid index number.")
+
+    return index
 
 
 # System module
 def system_module():
-    print("Enter 'start' to start monitoring, enter 'stop' to stop monitoring, enter 'exit' to exit.")
+    global device_index
+    status_display("Enter 'Set monitoring device' to set up the monitoring device, "
+                   "enter 'start' to start monitoring, enter 'stop' to stop monitoring, "
+                   "enter 'exit' to exit.")
     time.sleep(5)  # Wait for 5 seconds before starting monitoring
 
     log_path = "/path/to/log/directory"  # Specify the log file path here
@@ -152,12 +181,20 @@ def system_module():
     while True:
         command = input("Enter command: ")
 
-        if command == "start":
-            status_display("Starting monitoring...")
-            stop_audio_flag = True
-            time.sleep(1)
-            monitoring_thread = Thread(target=monitoring_1, args=(log_filename,))
-            monitoring_thread.start()
+        if command == "Set monitoring device":
+            status_display("Setting up monitoring device...")
+            device_index = select_audio_device()
+            status_display(f"Monitoring device set to index {device_index}.")
+        elif command == "start":
+            if device_index is None:
+                status_display(
+                    "Warning: Monitoring device not set. Please set the monitoring device before starting monitoring.")
+            else:
+                status_display("Starting monitoring...")
+                stop_audio_flag = True
+                time.sleep(1)
+                monitoring_thread = Thread(target=monitoring_1, args=(log_filename, device_index))
+                monitoring_thread.start()
         elif command == "stop":
             status_display("Stopping monitoring...")
             write_to_log(log_filename, "Monitoring stopped.")
@@ -180,7 +217,6 @@ def system_module():
 # Entry point of the program
 if __name__ == "__main__":
     system_module()
-
 
 # Make sure you have the appropriate python 3 environment deployed on your computer.
 # Make sure you have installed the required libraries using the following command.

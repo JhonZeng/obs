@@ -7,6 +7,10 @@ import numpy as np
 from obswebsocket import obsws, requests
 from threading import Thread
 
+# Declare global variables
+global stop_audio_flag
+global device_index
+
 # OBS WebSocket configuration
 obs_host = "localhost"
 obs_port = 4444
@@ -168,10 +172,9 @@ def select_audio_device():
 
 # System module
 def system_module():
-    global device_index
-    status_display("Enter 'Set monitoring device' to set up the monitoring device, "
-                   "enter 'start' to start monitoring, enter 'stop' to stop monitoring, "
-                   "enter 'exit' to exit.")
+    print("Enter 'Set monitoring device' to set up the monitoring device, "
+          "enter 'start' to start monitoring, enter 'stop' to stop monitoring, "
+          "enter 'exit' to exit.")
     time.sleep(5)  # Wait for 5 seconds before starting monitoring
 
     log_path = "/path/to/log/directory"  # Specify the log file path here
@@ -180,7 +183,8 @@ def system_module():
 
     while True:
         command = input("Enter command: ")
-
+        global stop_audio_flag
+        global device_index
         if command == "Set monitoring device":
             status_display("Setting up monitoring device...")
             device_index = select_audio_device()
@@ -191,6 +195,7 @@ def system_module():
                     "Warning: Monitoring device not set. Please set the monitoring device before starting monitoring.")
             else:
                 status_display("Starting monitoring...")
+                write_to_log(log_filename, "Monitoring started.")
                 stop_audio_flag = True
                 time.sleep(1)
                 monitoring_thread = Thread(target=monitoring_1, args=(log_filename, device_index))

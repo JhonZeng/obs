@@ -7,6 +7,10 @@ import numpy as np
 from obswebsocket import obsws, requests
 from threading import Thread
 
+# Declare global variables
+global stop_audio_flag
+global device_index
+
 # OBS WebSocket configuration
 obs_host = "localhost"
 obs_port = 4444
@@ -17,11 +21,11 @@ obs_ws = obsws(obs_host, obs_port, obs_password)
 obs_ws.connect()
 
 # Audio settings
-CHUNK = 1024
+CHUNK = 262144
 FORMAT = pyaudio.paInt16
 CHANNELS = 2
 RATE = 44100
-THRESHOLD = 0.02  # Threshold for music detection
+THRESHOLD = 0.5  # Adjust as needed
 
 
 # Function to create a log file
@@ -75,7 +79,6 @@ def monitoring_1(log_filename, device_index):
     time.sleep(5)
 
     p = pyaudio.PyAudio()
-
     stream = p.open(format=FORMAT,
                     channels=CHANNELS,
                     rate=RATE,
@@ -89,9 +92,13 @@ def monitoring_1(log_filename, device_index):
     while not stop_audio_flag:
         data = stream.read(CHUNK)
         audio_data = np.frombuffer(data, dtype=np.int16)
-        rms = np.sqrt(np.mean(np.square(audio_data)))
 
-        if rms > THRESHOLD:
+        # Apply Fourier transform to the audio data
+        audio_fft = np.fft.fft(audio_data)
+        frequency_spectrum = np.abs(audio_fft)
+
+        # Compute the threshold based on the max value of the frequency spectrum
+        if np.max(frequency_spectrum) > THRESHOLD:
             status_display("Music detected!")
             write_to_log(log_filename, "Music detected!")
             switch_and_play_music()
@@ -108,7 +115,6 @@ def monitoring_2(log_filename, device_index):
     time.sleep(5)
 
     p = pyaudio.PyAudio()
-
     stream = p.open(format=FORMAT,
                     channels=CHANNELS,
                     rate=RATE,
@@ -122,9 +128,13 @@ def monitoring_2(log_filename, device_index):
     while not stop_audio_flag:
         data = stream.read(CHUNK)
         audio_data = np.frombuffer(data, dtype=np.int16)
-        rms = np.sqrt(np.mean(np.square(audio_data)))
 
-        if rms < THRESHOLD:
+        # Apply Fourier transform to the audio data
+        audio_fft = np.fft.fft(audio_data)
+        frequency_spectrum = np.abs(audio_fft)
+
+        # Check if the frequency spectrum exceeds the threshold
+        if np.max(frequency_spectrum) < THRESHOLD:
             status_display("Music stopped")
             write_to_log(log_filename, "Music stopped")
             switch_back_audio()
@@ -168,10 +178,11 @@ def select_audio_device():
 
 # System module
 def system_module():
+    global stop_audio_flag
     global device_index
-    status_display("Enter 'Set monitoring device' to set up the monitoring device, "
-                   "enter 'start' to start monitoring, enter 'stop' to stop monitoring, "
-                   "enter 'exit' to exit.")
+    print("Enter 'Set monitoring device' to set up the monitoring device, "
+          "enter 'start' to start monitoring, enter 'stop' to stop monitoring, "
+          "enter 'exit' to exit.")
     time.sleep(5)  # Wait for 5 seconds before starting monitoring
 
     log_path = "/path/to/log/directory"  # Specify the log file path here
@@ -180,7 +191,6 @@ def system_module():
 
     while True:
         command = input("Enter command: ")
-
         if command == "Set monitoring device":
             status_display("Setting up monitoring device...")
             device_index = select_audio_device()
@@ -191,6 +201,7 @@ def system_module():
                     "Warning: Monitoring device not set. Please set the monitoring device before starting monitoring.")
             else:
                 status_display("Starting monitoring...")
+                write_to_log(log_filename, "Monitoring started.")
                 stop_audio_flag = True
                 time.sleep(1)
                 monitoring_thread = Thread(target=monitoring_1, args=(log_filename, device_index))

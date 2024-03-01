@@ -5,7 +5,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="6121b6f1-af77-40fa-82f3-09377c219664" name="Changes" comment="After limited environment testing, it is tailored to our needs, which is to detect the presence of music in the ambient audio captured by the live microphone. The root mean square (RMS) analysis originally used in the V3-1 code is not a suitable method for detecting the presence of music.&#10;&#10;This update changes the analysis method from root mean square (RMS) analysis to short-time Fourier transform (STFT). Analyze the frequency components of the audio signal by converting the time domain audio data to the frequency domain to determine whether there are prominent frequency peaks. The final implementation determines whether there is a melody pattern or musical content in the ambient audio captured by the microphone. If it exists, it proves that there is at least audio content that can be considered a melody in the environmental audio. At this time, we operate obs to switch audio sources.&#10;&#10;Advantages: It uses a relatively simple algorithm to analyze music frequencies. While completing basic analysis, it reduces the consumption of live broadcast machine functions.&#10;Disadvantages: The analysis method used is not robust enough, and it is difficult to detect some long melodies. And under the interference of complex external environmental noise, it is impossible to ensure that accurate frequency analysis can be completed.&#10;At present, the recording time of a single analysis unit is 6s. If the length of a single chord exceeds 3s, the detection cannot be ensured (the principle is to detect whether there is a repeated spectrum. To detect it, it must be repeated at least once.). The length of the recording time of this analysis unit is directly proportional to the system response speed. That is, when set to 6s, it will be judged every 6s whether to switch the audio source. Continuing to lengthen the recording time will cause the system to wait too long for each response, making it meaningless.">
-      <change afterPath="$PROJECT_DIR$/User manual.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/audio v3.py" beforeDir="false" afterPath="$PROJECT_DIR$/audio v4.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -22,7 +23,7 @@
   <component name="Git.Settings">
     <option name="RECENT_BRANCH_BY_REPOSITORY">
       <map>
-        <entry key="$PROJECT_DIR$" value="v2" />
+        <entry key="$PROJECT_DIR$" value="v3-Monitoring-devices-are-optional" />
       </map>
     </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
@@ -49,7 +50,7 @@
   "keyToString": {
     "RunOnceActivity.OpenProjectViewOnStart": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
-    "git-widget-placeholder": "v3-Monitoring-devices-are-optional",
+    "git-widget-placeholder": "v4-using-librosa-library",
     "last_opened_file_path": "/Users/johnzeng/PycharmProjects/obs",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",
@@ -120,7 +121,7 @@
       <workItem from="1709307078855" duration="569000" />
       <workItem from="1709308141728" duration="2768000" />
       <workItem from="1709317786235" duration="40000" />
-      <workItem from="1709317833482" duration="3040000" />
+      <workItem from="1709317833482" duration="4698000" />
     </task>
     <task id="LOCAL-00001" summary="Changes">
       <option name="closed" value="true" />
@@ -178,7 +179,15 @@
       <option name="project" value="LOCAL" />
       <updated>1709322140710</updated>
     </task>
-    <option name="localTasksCounter" value="8" />
+    <task id="LOCAL-00008" summary="After limited environment testing, it is tailored to our needs, which is to detect the presence of music in the ambient audio captured by the live microphone. The root mean square (RMS) analysis originally used in the V3-1 code is not a suitable method for detecting the presence of music.&#10;&#10;This update changes the analysis method from root mean square (RMS) analysis to short-time Fourier transform (STFT). Analyze the frequency components of the audio signal by converting the time domain audio data to the frequency domain to determine whether there are prominent frequency peaks. The final implementation determines whether there is a melody pattern or musical content in the ambient audio captured by the microphone. If it exists, it proves that there is at least audio content that can be considered a melody in the environmental audio. At this time, we operate obs to switch audio sources.&#10;&#10;Advantages: It uses a relatively simple algorithm to analyze music frequencies. While completing basic analysis, it reduces the consumption of live broadcast machine functions.&#10;Disadvantages: The analysis method used is not robust enough, and it is difficult to detect some long melodies. And under the interference of complex external environmental noise, it is impossible to ensure that accurate frequency analysis can be completed.&#10;At present, the recording time of a single analysis unit is 6s. If the length of a single chord exceeds 3s, the detection cannot be ensured (the principle is to detect whether there is a repeated spectrum. To detect it, it must be repeated at least once.). The length of the recording time of this analysis unit is directly proportional to the system response speed. That is, when set to 6s, it will be judged every 6s whether to switch the audio source. Continuing to lengthen the recording time will cause the system to wait too long for each response, making it meaningless.">
+      <option name="closed" value="true" />
+      <created>1709322814511</created>
+      <option name="number" value="00008" />
+      <option name="presentableId" value="LOCAL-00008" />
+      <option name="project" value="LOCAL" />
+      <updated>1709322814511</updated>
+    </task>
+    <option name="localTasksCounter" value="9" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -197,6 +206,7 @@
   </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="Changes" />
+    <MESSAGE value="Merge remote-tracking branch 'origin/v3-Monitoring-devices-are-optional' into v3-Monitoring-devices-are-optional&#10;&#10;# Conflicts:&#10;#&#9;.idea/workspace.xml&#10;#&#9;audio v3.py" />
     <MESSAGE value="After limited environment testing, it is tailored to our needs, which is to detect the presence of music in the ambient audio captured by the live microphone. The root mean square (RMS) analysis originally used in the V3-1 code is not a suitable method for detecting the presence of music.&#10;&#10;This update changes the analysis method from root mean square (RMS) analysis to short-time Fourier transform (STFT). Analyze the frequency components of the audio signal by converting the time domain audio data to the frequency domain to determine whether there are prominent frequency peaks. The final implementation determines whether there is a melody pattern or musical content in the ambient audio captured by the microphone. If it exists, it proves that there is at least audio content that can be considered a melody in the environmental audio. At this time, we operate obs to switch audio sources.&#10;&#10;Advantages: It uses a relatively simple algorithm to analyze music frequencies. While completing basic analysis, it reduces the consumption of live broadcast machine functions.&#10;Disadvantages: The analysis method used is not robust enough, and it is difficult to detect some long melodies. And under the interference of complex external environmental noise, it is impossible to ensure that accurate frequency analysis can be completed.&#10;At present, the recording time of a single analysis unit is 6s. If the length of a single chord exceeds 3s, the detection cannot be ensured (the principle is to detect whether there is a repeated spectrum. To detect it, it must be repeated at least once.). The length of the recording time of this analysis unit is directly proportional to the system response speed. That is, when set to 6s, it will be judged every 6s whether to switch the audio source. Continuing to lengthen the recording time will cause the system to wait too long for each response, making it meaningless." />
     <option name="LAST_COMMIT_MESSAGE" value="After limited environment testing, it is tailored to our needs, which is to detect the presence of music in the ambient audio captured by the live microphone. The root mean square (RMS) analysis originally used in the V3-1 code is not a suitable method for detecting the presence of music.&#10;&#10;This update changes the analysis method from root mean square (RMS) analysis to short-time Fourier transform (STFT). Analyze the frequency components of the audio signal by converting the time domain audio data to the frequency domain to determine whether there are prominent frequency peaks. The final implementation determines whether there is a melody pattern or musical content in the ambient audio captured by the microphone. If it exists, it proves that there is at least audio content that can be considered a melody in the environmental audio. At this time, we operate obs to switch audio sources.&#10;&#10;Advantages: It uses a relatively simple algorithm to analyze music frequencies. While completing basic analysis, it reduces the consumption of live broadcast machine functions.&#10;Disadvantages: The analysis method used is not robust enough, and it is difficult to detect some long melodies. And under the interference of complex external environmental noise, it is impossible to ensure that accurate frequency analysis can be completed.&#10;At present, the recording time of a single analysis unit is 6s. If the length of a single chord exceeds 3s, the detection cannot be ensured (the principle is to detect whether there is a repeated spectrum. To detect it, it must be repeated at least once.). The length of the recording time of this analysis unit is directly proportional to the system response speed. That is, when set to 6s, it will be judged every 6s whether to switch the audio source. Continuing to lengthen the recording time will cause the system to wait too long for each response, making it meaningless." />
   </component>

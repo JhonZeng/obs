@@ -6,6 +6,7 @@ import pyaudio
 import numpy as np
 from obswebsocket import obsws, requests
 from threading import Thread
+import librosa
 
 # Declare global variables
 global stop_audio_flag
@@ -25,7 +26,7 @@ CHUNK = 262144
 FORMAT = pyaudio.paInt16
 CHANNELS = 2
 RATE = 44100
-THRESHOLD = 0.5  # Adjust as needed
+THRESHOLD = 0.5  # Threshold for music detection
 
 
 # Function to create a log file
@@ -79,6 +80,7 @@ def monitoring_1(log_filename, device_index):
     time.sleep(5)
 
     p = pyaudio.PyAudio()
+
     stream = p.open(format=FORMAT,
                     channels=CHANNELS,
                     rate=RATE,
@@ -93,17 +95,18 @@ def monitoring_1(log_filename, device_index):
         data = stream.read(CHUNK)
         audio_data = np.frombuffer(data, dtype=np.int16)
 
-        # Apply Fourier transform to the audio data
-        audio_fft = np.fft.fft(audio_data)
-        frequency_spectrum = np.abs(audio_fft)
+        # Perform chroma feature extraction using librosa
+        chroma = librosa.feature.chroma_stft(y=audio_data, sr=RATE)
 
-        # Compute the threshold based on the max value of the frequency spectrum
-        if np.max(frequency_spectrum) > THRESHOLD:
+        # Check if there are prominent chroma features indicating music
+        if np.max(chroma) > THRESHOLD:
             status_display("Music detected!")
             write_to_log(log_filename, "Music detected!")
+            # Switch audio source in OBS
             switch_and_play_music()
             break
 
+    # Cleanup
     stop_audio_monitoring(p, stream)
     monitoring_2(log_filename, device_index)
 
@@ -115,6 +118,7 @@ def monitoring_2(log_filename, device_index):
     time.sleep(5)
 
     p = pyaudio.PyAudio()
+
     stream = p.open(format=FORMAT,
                     channels=CHANNELS,
                     rate=RATE,
@@ -129,17 +133,18 @@ def monitoring_2(log_filename, device_index):
         data = stream.read(CHUNK)
         audio_data = np.frombuffer(data, dtype=np.int16)
 
-        # Apply Fourier transform to the audio data
-        audio_fft = np.fft.fft(audio_data)
-        frequency_spectrum = np.abs(audio_fft)
+        # Perform chroma feature extraction using librosa
+        chroma = librosa.feature.chroma_stft(y=audio_data, sr=RATE)
 
-        # Check if the frequency spectrum exceeds the threshold
-        if np.max(frequency_spectrum) < THRESHOLD:
+        # Check if there are prominent chroma features indicating music
+        if np.max(chroma) < THRESHOLD:
             status_display("Music stopped")
             write_to_log(log_filename, "Music stopped")
+            # Switch audio source in OBS
             switch_back_audio()
             break
 
+    # Cleanup
     stop_audio_monitoring(p, stream)
     monitoring_1(log_filename, device_index)
 
